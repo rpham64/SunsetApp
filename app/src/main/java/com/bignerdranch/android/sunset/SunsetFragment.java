@@ -21,7 +21,9 @@ public class SunsetFragment extends Fragment {
 
     private View mSceneView;
     private View mSunView;
+    private View mSunReflectionView;
     private View mSkyView;
+    private View mSeaView;
 
     private int mBlueSkyColor;
     private int mSunsetSkyColor;
@@ -40,7 +42,9 @@ public class SunsetFragment extends Fragment {
 
         mSceneView = view;
         mSunView = view.findViewById(R.id.sun);
+        mSunReflectionView = view.findViewById(R.id.sun_reflection);
         mSkyView = view.findViewById(R.id.sky);
+        mSeaView = view.findViewById(R.id.sea);
 
         Resources resources = getResources();
         mBlueSkyColor = resources.getColor(R.color.blue_sky);
@@ -55,10 +59,10 @@ public class SunsetFragment extends Fragment {
             public void onClick(View v) {
 
                 if (isSunset) {
-                    startAnimation();
+                    sunsetAnimation();
                     isSunset = false;
                 } else {
-                    reverseAnimation();
+                    sunriseAnimation();
                     isSunset = true;
                 }
 
@@ -68,11 +72,15 @@ public class SunsetFragment extends Fragment {
         return view;
     }
 
-    private void startAnimation() {
+    private void sunsetAnimation() {
 
         float sunYStart = mSunView.getTop();
         float sunYEnd = mSkyView.getHeight();
 
+        float sunReflectionYStart = mSunReflectionView.getTop();
+        float sunReflectionYEnd = -mSeaView.getHeight();
+
+        /** Sun Animator */
         ObjectAnimator heightAnimator = ObjectAnimator
                 .ofFloat(mSunView, "y", sunYStart, sunYEnd)
                 .setDuration(3000);
@@ -80,6 +88,14 @@ public class SunsetFragment extends Fragment {
         // Speed up sun animation
         heightAnimator.setInterpolator(new AccelerateInterpolator());
 
+        /** Sun Reflection Animator */
+        ObjectAnimator reflectAnimator = ObjectAnimator
+                .ofFloat(mSunReflectionView, "y", sunReflectionYStart, sunReflectionYEnd)
+                .setDuration(4000);
+
+        reflectAnimator.setInterpolator(new AccelerateInterpolator());
+
+        /** Sunset Sky Animator */
         ObjectAnimator sunsetSkyAnimator = ObjectAnimator
                 .ofInt(mSkyView, "backgroundColor", mBlueSkyColor, mSunsetSkyColor)
                 .setDuration(3000);
@@ -87,6 +103,7 @@ public class SunsetFragment extends Fragment {
         // Improves ObjectAnimator's color transition
         sunsetSkyAnimator.setEvaluator(new ArgbEvaluator());
 
+        /** Night Sky Animator */
         ObjectAnimator nightSkyAnimator = ObjectAnimator
                 .ofInt(mSkyView, "backgroundColor", mSunsetSkyColor, mNightSkyColor)
                 .setDuration(1500);
@@ -97,17 +114,22 @@ public class SunsetFragment extends Fragment {
 
         animatorSet
                 .play(heightAnimator)
+                .with(reflectAnimator)
                 .with(sunsetSkyAnimator)
                 .before(nightSkyAnimator);
 
         animatorSet.start();
     }
 
-    private void reverseAnimation() {
+    private void sunriseAnimation() {
 
         float sunYStart = mSkyView.getHeight();
         float sunYEnd = mSunView.getTop();
 
+        float sunReflectionYStart = -mSeaView.getHeight();
+        float sunReflectionYEnd = mSunReflectionView.getTop();
+
+        /** Sun Animator */
         ObjectAnimator heightAnimator = ObjectAnimator
                 .ofFloat(mSunView, "y", sunYStart, sunYEnd)
                 .setDuration(3000);
@@ -115,6 +137,14 @@ public class SunsetFragment extends Fragment {
         // Speed up sun animation
         heightAnimator.setInterpolator(new AccelerateInterpolator());
 
+        /** Sun Reflection Animator */
+        ObjectAnimator reflectAnimator = ObjectAnimator
+                .ofFloat(mSunReflectionView, "y", sunReflectionYStart, sunReflectionYEnd)
+                .setDuration(3000);
+
+        reflectAnimator.setInterpolator(new AccelerateInterpolator());
+
+        /** Sunset Sky Animator */
         ObjectAnimator sunsetSkyAnimator = ObjectAnimator
                 .ofInt(mSkyView, "backgroundColor", mSunsetSkyColor, mBlueSkyColor)
                 .setDuration(1500);
@@ -122,6 +152,7 @@ public class SunsetFragment extends Fragment {
         // Improves ObjectAnimator's color transition
         sunsetSkyAnimator.setEvaluator(new ArgbEvaluator());
 
+        /** Night Sky Animator */
         ObjectAnimator nightSkyAnimator = ObjectAnimator
                 .ofInt(mSkyView, "backgroundColor", mNightSkyColor, mSunsetSkyColor)
                 .setDuration(3000);
@@ -133,7 +164,8 @@ public class SunsetFragment extends Fragment {
         animatorSet
                 .play(nightSkyAnimator)
                 .before(sunsetSkyAnimator)
-                .with(heightAnimator);
+                .with(heightAnimator)
+                .with(reflectAnimator);
 
         animatorSet.start();
     }
